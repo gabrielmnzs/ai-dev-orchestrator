@@ -10,7 +10,8 @@ type Config = {
   linearTeamName: string;
   linearProjectName: string;
   stateIssueTitle: string;
-  webhookSecret?: string;
+  githubWebhookSecret?: string;
+  linearWebhookSecret?: string;
   schedulerMinutes: number;
 };
 
@@ -45,7 +46,8 @@ export const loadConfig = (): Config => {
     linearTeamName: getRequiredEnv('LINEAR_TEAM_NAME'),
     linearProjectName: getRequiredEnv('LINEAR_PROJECT_NAME'),
     stateIssueTitle: getRequiredEnv('STATE_ISSUE_TITLE'),
-    webhookSecret: getOptionalEnv('WEBHOOK_SECRET'),
+    githubWebhookSecret: getOptionalEnv('GITHUB_WEBHOOK_SECRET'),
+    linearWebhookSecret: getOptionalEnv('LINEAR_WEBHOOK_SECRET'),
     schedulerMinutes
   };
 };

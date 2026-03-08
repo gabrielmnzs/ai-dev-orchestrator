@@ -69,8 +69,8 @@ const startServer = async () => {
     res.status(200).json({ ok: true, state: orchestrator.getState().sprint.state });
   });
 
-  app.post('/webhooks/github', createGitHubWebhookHandler(orchestrator, config.webhookSecret));
-  app.post('/webhooks/linear', createLinearWebhookHandler(orchestrator, config.webhookSecret));
+  app.post('/webhooks/github', createGitHubWebhookHandler(orchestrator, config.githubWebhookSecret));
+  app.post('/webhooks/linear', createLinearWebhookHandler(orchestrator, config.linearWebhookSecret));
 
   const port = Number(process.env.PORT || 3000);
   app.listen(port, () => {

@@ -20,6 +20,7 @@ export type OrchestratorState = {
     state: SprintState;
     planningIssueLinearId: string | null;
     planningIssueLinearKey: string | null;
+    consensusReached: boolean;
   };
   tasks: Array<{
     linearId: string | null;
@@ -52,7 +53,8 @@ export const createInitialState = (params: {
     number: 1,
     state: 'IDLE',
     planningIssueLinearId: null,
-    planningIssueLinearKey: null
+    planningIssueLinearKey: null,
+    consensusReached: false
   },
   tasks: [],
   agents: {
@@ -81,7 +83,23 @@ export const loadState = async (params: {
   );
 
   const parsed = issue.body ? JSON.parse(issue.body) : params.initialState;
-  return { state: parsed, issueNumber: issue.number };
+  const state: OrchestratorState = {
+    ...params.initialState,
+    ...parsed,
+    sprint: {
+      ...params.initialState.sprint,
+      ...parsed.sprint
+    },
+    agents: {
+      ...params.initialState.agents,
+      ...parsed.agents
+    },
+    config: {
+      ...params.initialState.config,
+      ...parsed.config
+    }
+  };
+  return { state, issueNumber: issue.number };
 };
 
 export const persistState = async (params: {

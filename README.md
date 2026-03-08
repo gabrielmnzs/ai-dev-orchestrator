@@ -20,7 +20,8 @@ Node orchestrator for coordinating a multi-agent Codex dev team with Linear and 
 - LINEAR_TEAM_NAME
 - LINEAR_PROJECT_NAME
 - STATE_ISSUE_TITLE
-- WEBHOOK_SECRET (optional)
+- GITHUB_WEBHOOK_SECRET (recommended; if omitted, GitHub signature validation is skipped)
+- LINEAR_WEBHOOK_SECRET (recommended; if omitted, Linear signature validation is skipped)
 
 ## Scripts
 

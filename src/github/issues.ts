@@ -71,3 +71,20 @@ export const updateIssueBody = async (
     body
   });
 };
+
+export const createRepoIssue = async (params: {
+  octokit: Octokit;
+  repoFullName: string;
+  title: string;
+  body: string;
+}): Promise<number> => {
+  const { owner, repo } = parseRepo(params.repoFullName);
+  const response = await params.octokit.request('POST /repos/{owner}/{repo}/issues', {
+    owner,
+    repo,
+    title: params.title,
+    body: params.body
+  });
+
+  return response.data.number;
+};

@@ -24,6 +24,10 @@ type IssueResult = {
   issue: { id: string; identifier: string; title: string; description?: string | null };
 };
 
+type IssueCommentsResult = {
+  issue: { comments: { nodes: Array<{ body: string }> } };
+};
+
 let cachedTeamId: string | null = null;
 let cachedProjectId: string | null = null;
 
@@ -87,6 +91,18 @@ const getIssueQuery = `
       identifier
       title
       description
+    }
+  }
+`;
+
+const getIssueCommentsQuery = `
+  query IssueComments($id: String!) {
+    issue(id: $id) {
+      comments {
+        nodes {
+          body
+        }
+      }
     }
   }
 `;
@@ -173,4 +189,15 @@ export const getIssue = async (params: {
     id: params.issueId
   });
   return data.issue;
+};
+
+export const getIssueComments = async (params: {
+  client: LinearClient;
+  issueId: string;
+}): Promise<string[]> => {
+  const data = await params.client.request<IssueCommentsResult>(getIssueCommentsQuery, {
+    id: params.issueId
+  });
+
+  return data.issue.comments.nodes.map((node) => node.body).filter(Boolean);
 };
