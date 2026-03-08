@@ -343,7 +343,8 @@ export class Orchestrator {
         state: 'IDLE',
         planningIssueLinearId: null,
         planningIssueLinearKey: null,
-        consensusReached: false
+        consensusReached: false,
+        planningCommentAuthors: []
       },
       tasks: []
     };

@@ -94,9 +94,9 @@ export const loadState = async (params: {
             ? params.initialState.agents.junior
             : params.initialState.agents.senior);
         return {
-          workflowDispatched: false,
+          ...task,
           reviewerUser,
-          ...task
+          workflowDispatched: task.workflowDispatched ?? false
         };
       })
     : params.initialState.tasks;
