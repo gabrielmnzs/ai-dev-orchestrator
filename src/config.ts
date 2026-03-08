@@ -5,6 +5,7 @@ type Config = {
   githubUpstreamRepo: string;
   orchestratorRepo: string;
   agentWorkflowFile: string;
+  orchestratorRef: string;
   githubOrchUser: string;
   devSeniorUser: string;
   devJuniorUser: string;
@@ -45,6 +46,7 @@ export const loadConfig = (): Config => {
     githubUpstreamRepo: getRequiredEnv('GITHUB_UPSTREAM_REPO'),
     orchestratorRepo: getRequiredEnv('ORCHESTRATOR_REPO'),
     agentWorkflowFile: getOptionalEnv('AGENT_WORKFLOW_FILE') || 'ai-dev-agent.yml',
+    orchestratorRef: getOptionalEnv('ORCHESTRATOR_REF') || 'main',
     githubOrchUser: getRequiredEnv('GITHUB_ORCH_USER'),
     devSeniorUser: getRequiredEnv('DEV_SENIOR_USER'),
     devJuniorUser: getRequiredEnv('DEV_JUNIOR_USER'),

@@ -88,6 +88,16 @@ const startServer = async () => {
     }
   });
 
+  app.post('/dispatch-test', async (_req, res) => {
+    try {
+      const result = await orchestrator.dispatchTest();
+      res.status(result.ok ? 200 : 400).json(result);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      res.status(500).json({ ok: false, message });
+    }
+  });
+
   app.get('/checks', async (_req, res) => {
     const results = {
       github: {

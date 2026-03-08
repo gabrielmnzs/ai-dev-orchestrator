@@ -13,6 +13,7 @@ type OrchestratorDeps = {
   repoFullName: string;
   orchestratorRepo: string;
   agentWorkflowFile: string;
+  orchestratorRef: string;
   issueNumber: number;
   linearTeamName: string;
   linearProjectName: string;
@@ -45,6 +46,24 @@ export class Orchestrator {
     await this.setConsensusReached();
     await this.createTasksFromDebate();
     return { ok: true, message: 'consensus simulated and tasks created' };
+  }
+
+  async dispatchTest(): Promise<{ ok: boolean; message: string }> {
+    const prompt = 'TEST: validate workflow dispatch from orchestrator';
+    await dispatchWorkflow({
+      octokit: this.deps.octokit,
+      repoFullName: this.deps.orchestratorRepo,
+      workflowFile: this.deps.agentWorkflowFile,
+      ref: this.deps.orchestratorRef,
+      inputs: {
+        agent: 'senior',
+        linear_issue: 'TEST-0',
+        branch: 'feat/test-dispatch',
+        prompt
+      }
+    });
+
+    return { ok: true, message: 'workflow dispatched' };
   }
 
   private async updateState(state: OrchestratorState): Promise<void> {
@@ -519,7 +538,7 @@ export class Orchestrator {
         octokit: this.deps.octokit,
         repoFullName: this.deps.orchestratorRepo,
         workflowFile: this.deps.agentWorkflowFile,
-        ref: 'main',
+        ref: this.deps.orchestratorRef,
         inputs: {
           agent: task.assignee,
           linear_issue: task.linearKey || '',
