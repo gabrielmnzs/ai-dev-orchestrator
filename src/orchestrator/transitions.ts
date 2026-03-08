@@ -1,6 +1,6 @@
 import { Octokit } from '@octokit/core';
 import { LinearClient } from '../linear/client';
-import { createIssue, getIssueComments, updateIssueState } from '../linear/issues';
+import { createComment, createIssue, getIssueComments, updateIssueState } from '../linear/issues';
 import { createRepoIssue } from '../github/issues';
 import { logger } from '../utils/logger';
 import { OrchestratorState, persistState, SprintState } from './state';
@@ -60,6 +60,9 @@ export class Orchestrator {
         const linearKey = this.extractLinearKey(prBody, prTitle);
         if (linearKey) {
           await this.attachPrToTask(linearKey, prNumber);
+          await this.postPlanningComment(
+            `PR #${prNumber} opened for Linear ${linearKey}.`
+          );
         }
       }
 
@@ -67,6 +70,9 @@ export class Orchestrator {
         const linearKey = this.extractLinearKey(prBody, prTitle);
         if (linearKey) {
           await this.markTaskMerged(linearKey);
+          await this.postPlanningComment(
+            `PR #${prNumber} merged for Linear ${linearKey}.`
+          );
         }
       }
     }
@@ -85,10 +91,12 @@ export class Orchestrator {
 
       if (state === 'approved') {
         await this.incrementReviewRound(linearKey);
+        await this.postPlanningComment(`PR review approved for Linear ${linearKey}.`);
       }
 
       if (state === 'changes_requested') {
         await this.setSprintStateAndPersist('AUTHOR_FIXES');
+        await this.postPlanningComment(`PR changes requested for Linear ${linearKey}.`);
       }
     }
   }
@@ -208,6 +216,7 @@ export class Orchestrator {
 
     await this.updateState(nextState);
     logger.info('Planning issue created', { planningIssue });
+    await this.postPlanningComment('Sprint planning started. Please propose 2-3 features.');
   }
 
   private async startDebate(): Promise<void> {
@@ -288,6 +297,9 @@ export class Orchestrator {
 
     await this.updateState(nextState);
     logger.info('Tasks created from debate', { count: tasks.length });
+    await this.postPlanningComment(
+      `Created ${tasks.length} tasks and moved sprint to DEV.`
+    );
   }
 
   private async resetSprint(): Promise<void> {
@@ -332,6 +344,20 @@ export class Orchestrator {
 
     await this.updateState(nextState);
     logger.info('Consensus reached, moving to TASKING');
+    await this.postPlanningComment('Consensus reached. Moving to TASKING.');
+  }
+
+  private async postPlanningComment(body: string): Promise<void> {
+    const planningIssueId = this.state.sprint.planningIssueLinearId;
+    if (!planningIssueId) {
+      return;
+    }
+
+    await createComment({
+      client: this.deps.linearClient,
+      issueId: planningIssueId,
+      body
+    });
   }
 
   private async setSprintStateAndPersist(state: SprintState): Promise<void> {
