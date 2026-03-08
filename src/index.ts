@@ -1,4 +1,5 @@
 import express from 'express';
+import type { IncomingMessage } from 'http';
 import { loadConfig } from './config';
 import { getOctokit } from './github/app-auth';
 import { createGitHubWebhookHandler } from './github/webhooks';
@@ -14,6 +15,12 @@ declare global {
     interface Request {
       rawBody?: string;
     }
+  }
+}
+
+declare module 'http' {
+  interface IncomingMessage {
+    rawBody?: string;
   }
 }
 
