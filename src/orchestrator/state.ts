@@ -21,6 +21,7 @@ export type OrchestratorState = {
     planningIssueLinearId: string | null;
     planningIssueLinearKey: string | null;
     consensusReached: boolean;
+    planningCommentAuthors: string[];
   };
   tasks: Array<{
     linearId: string | null;
@@ -54,7 +55,8 @@ export const createInitialState = (params: {
     state: 'IDLE',
     planningIssueLinearId: null,
     planningIssueLinearKey: null,
-    consensusReached: false
+    consensusReached: false,
+    planningCommentAuthors: []
   },
   tasks: [],
   agents: {

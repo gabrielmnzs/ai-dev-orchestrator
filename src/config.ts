@@ -9,6 +9,8 @@ type Config = {
   linearApiKey: string;
   linearTeamName: string;
   linearProjectName: string;
+  linearSeniorUserId?: string;
+  linearJuniorUserId?: string;
   stateIssueTitle: string;
   githubWebhookSecret?: string;
   linearWebhookSecret?: string;
@@ -45,6 +47,8 @@ export const loadConfig = (): Config => {
     linearApiKey: getRequiredEnv('LINEAR_API_KEY'),
     linearTeamName: getRequiredEnv('LINEAR_TEAM_NAME'),
     linearProjectName: getRequiredEnv('LINEAR_PROJECT_NAME'),
+    linearSeniorUserId: getOptionalEnv('LINEAR_SENIOR_USER_ID'),
+    linearJuniorUserId: getOptionalEnv('LINEAR_JUNIOR_USER_ID'),
     stateIssueTitle: getRequiredEnv('STATE_ISSUE_TITLE'),
     githubWebhookSecret: getOptionalEnv('GITHUB_WEBHOOK_SECRET'),
     linearWebhookSecret: getOptionalEnv('LINEAR_WEBHOOK_SECRET'),

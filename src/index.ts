@@ -53,7 +53,9 @@ const startServer = async () => {
     repoFullName: config.githubUpstreamRepo,
     issueNumber,
     linearTeamName: config.linearTeamName,
-    linearProjectName: config.linearProjectName
+    linearProjectName: config.linearProjectName,
+    linearSeniorUserId: config.linearSeniorUserId,
+    linearJuniorUserId: config.linearJuniorUserId
   });
 
   const app = express();
@@ -67,6 +69,10 @@ const startServer = async () => {
 
   app.get('/health', (_req, res) => {
     res.status(200).json({ ok: true, state: orchestrator.getState().sprint.state });
+  });
+
+  app.get('/status', (_req, res) => {
+    res.status(200).json(orchestrator.getState());
   });
 
   app.post('/webhooks/github', createGitHubWebhookHandler(orchestrator, config.githubWebhookSecret));

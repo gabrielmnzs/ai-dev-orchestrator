@@ -19,6 +19,8 @@ Node orchestrator for coordinating a multi-agent Codex dev team with Linear and 
 - LINEAR_API_KEY
 - LINEAR_TEAM_NAME
 - LINEAR_PROJECT_NAME
+- LINEAR_SENIOR_USER_ID (optional, assigns Linear tasks to senior)
+- LINEAR_JUNIOR_USER_ID (optional, assigns Linear tasks to junior)
 - STATE_ISSUE_TITLE
 - GITHUB_WEBHOOK_SECRET (recommended; if omitted, GitHub signature validation is skipped)
 - LINEAR_WEBHOOK_SECRET (recommended; if omitted, Linear signature validation is skipped)
@@ -28,3 +30,8 @@ Node orchestrator for coordinating a multi-agent Codex dev team with Linear and 
 - `npm run dev`
 - `npm run build`
 - `npm start`
+
+## Endpoints
+
+- `GET /health`
+- `GET /status`

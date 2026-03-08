@@ -12,6 +12,8 @@ type OrchestratorDeps = {
   issueNumber: number;
   linearTeamName: string;
   linearProjectName: string;
+  linearSeniorUserId?: string;
+  linearJuniorUserId?: string;
 };
 
 export class Orchestrator {
@@ -110,19 +112,35 @@ export class Orchestrator {
       const body = data?.['body'] as string | undefined;
       const issue = data?.['issue'] as Record<string, unknown> | undefined;
       const issueId = issue?.['id'] as string | undefined;
+      const authorId = this.extractCommentAuthorId(payload);
 
       if (!body || !issueId) {
         return;
       }
 
       const isPlanningIssue = issueId === this.state.sprint.planningIssueLinearId;
+      if (isPlanningIssue && authorId) {
+        const uniqueAuthors = new Set(this.state.sprint.planningCommentAuthors);
+        uniqueAuthors.add(authorId);
+        if (uniqueAuthors.size !== this.state.sprint.planningCommentAuthors.length) {
+          const nextState: OrchestratorState = {
+            ...this.state,
+            sprint: {
+              ...this.state.sprint,
+              planningCommentAuthors: Array.from(uniqueAuthors)
+            }
+          };
+          await this.updateState(nextState);
+        }
+      }
+
       if (isPlanningIssue && body.includes('CONSENSUS_REACHED')) {
         const comments = await getIssueComments({
           client: this.deps.linearClient,
           issueId
         });
 
-        if (comments.length >= 2) {
+        if (comments.length >= 2 && this.state.sprint.planningCommentAuthors.length >= 2) {
           await this.setConsensusReached();
         }
       }
@@ -257,12 +275,16 @@ export class Orchestrator {
 
     for (const [index, title] of taskTitles.entries()) {
       const description = `Derived from planning consensus.\n\n- ${title}`;
+      const assigneeId = index % 2 === 0
+        ? this.deps.linearSeniorUserId
+        : this.deps.linearJuniorUserId;
       const issue = await createIssue({
         client: this.deps.linearClient,
         teamName: this.deps.linearTeamName,
         projectName: this.deps.linearProjectName,
         title,
-        description
+        description,
+        assigneeId
       });
 
       const slug = this.slugify(title);
@@ -442,5 +464,15 @@ export class Orchestrator {
 
     await this.updateState({ ...this.state, tasks });
     logger.info('Review round incremented', { linearKey, reviewRound: updatedTask.reviewRound });
+  }
+
+  private extractCommentAuthorId(payload: Record<string, unknown>): string | null {
+    const data = payload['data'] as Record<string, unknown> | undefined;
+    const user = data?.['user'] as Record<string, unknown> | undefined;
+    const actor = payload['actor'] as Record<string, unknown> | undefined;
+    const userId = data?.['userId'] as string | undefined;
+    const userIdFromUser = user?.['id'] as string | undefined;
+    const actorId = actor?.['id'] as string | undefined;
+    return userId || userIdFromUser || actorId || null;
   }
 }

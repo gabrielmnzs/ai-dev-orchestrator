@@ -142,6 +142,7 @@ export const createIssue = async (params: {
   projectName: string;
   title: string;
   description?: string;
+  assigneeId?: string;
 }): Promise<{ id: string; identifier: string }> => {
   const teamId = await getTeamId(params.client, params.teamName);
   const projectId = await getProjectId(params.client, params.projectName);
@@ -150,7 +151,8 @@ export const createIssue = async (params: {
       teamId,
       projectId,
       title: params.title,
-      description: params.description || ''
+      description: params.description || '',
+      assigneeId: params.assigneeId
     }
   });
 
