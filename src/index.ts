@@ -54,6 +54,7 @@ const startServer = async () => {
     repoFullName: config.githubUpstreamRepo,
     orchestratorRepo: config.orchestratorRepo,
     agentWorkflowFile: config.agentWorkflowFile,
+    orchestratorRef: config.orchestratorRef,
     issueNumber,
     linearTeamName: config.linearTeamName,
     linearProjectName: config.linearProjectName,
