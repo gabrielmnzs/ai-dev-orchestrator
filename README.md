@@ -37,3 +37,4 @@ Node orchestrator for coordinating a multi-agent Codex dev team with Linear and 
 
 - `GET /health`
 - `GET /status`
+- `POST /simulate`

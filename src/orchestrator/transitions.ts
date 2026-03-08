@@ -33,6 +33,20 @@ export class Orchestrator {
     return this.state;
   }
 
+  async simulate(): Promise<{ ok: boolean; message: string }> {
+    if (!this.state.sprint.planningIssueLinearId) {
+      return { ok: false, message: 'planning issue not created yet' };
+    }
+
+    if (this.state.tasks.length > 0) {
+      return { ok: false, message: 'tasks already exist for this sprint' };
+    }
+
+    await this.setConsensusReached();
+    await this.createTasksFromDebate();
+    return { ok: true, message: 'consensus simulated and tasks created' };
+  }
+
   private async updateState(state: OrchestratorState): Promise<void> {
     this.state = state;
     await persistState({
