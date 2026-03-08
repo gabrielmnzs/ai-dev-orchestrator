@@ -30,8 +30,10 @@ export type OrchestratorState = {
     githubPrNumber: number | null;
     assignee: 'senior' | 'junior';
     branch: string;
+    reviewerUser: string;
     reviewRound: number;
     status: TaskState;
+    workflowDispatched: boolean;
   }>;
   agents: {
     senior: string;
@@ -85,6 +87,20 @@ export const loadState = async (params: {
   );
 
   const parsed = issue.body ? JSON.parse(issue.body) : params.initialState;
+  const mergedTasks = Array.isArray(parsed.tasks)
+    ? parsed.tasks.map((task: OrchestratorState['tasks'][number]) => {
+        const reviewerUser = task.reviewerUser
+          || (task.assignee === 'senior'
+            ? params.initialState.agents.junior
+            : params.initialState.agents.senior);
+        return {
+          workflowDispatched: false,
+          reviewerUser,
+          ...task
+        };
+      })
+    : params.initialState.tasks;
+
   const state: OrchestratorState = {
     ...params.initialState,
     ...parsed,
@@ -99,7 +115,8 @@ export const loadState = async (params: {
     config: {
       ...params.initialState.config,
       ...parsed.config
-    }
+    },
+    tasks: mergedTasks
   };
   return { state, issueNumber: issue.number };
 };

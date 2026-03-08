@@ -13,6 +13,8 @@ Node orchestrator for coordinating a multi-agent Codex dev team with Linear and 
 - GITHUB_APP_PRIVATE_KEY
 - GITHUB_APP_INSTALLATION_ID
 - GITHUB_UPSTREAM_REPO
+- ORCHESTRATOR_REPO
+- AGENT_WORKFLOW_FILE (optional, default ai-dev-agent.yml)
 - GITHUB_ORCH_USER
 - DEV_SENIOR_USER
 - DEV_JUNIOR_USER

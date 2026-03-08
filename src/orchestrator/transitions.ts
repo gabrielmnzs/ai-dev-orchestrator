@@ -2,13 +2,17 @@ import { Octokit } from '@octokit/core';
 import { LinearClient } from '../linear/client';
 import { createComment, createIssue, getIssueComments, updateIssueState } from '../linear/issues';
 import { createRepoIssue } from '../github/issues';
+import { dispatchWorkflow } from '../github/actions';
 import { logger } from '../utils/logger';
 import { OrchestratorState, persistState, SprintState } from './state';
+import { prompts } from './prompts';
 
 type OrchestratorDeps = {
   octokit: Octokit;
   linearClient: LinearClient;
   repoFullName: string;
+  orchestratorRepo: string;
+  agentWorkflowFile: string;
   issueNumber: number;
   linearTeamName: string;
   linearProjectName: string;
@@ -180,6 +184,7 @@ export class Orchestrator {
         await this.setSprintStateAndPersist('REVIEW');
         return;
       }
+      await this.dispatchPendingWorkflows();
       logger.info('DEV state - awaiting PRs');
       return;
     }
@@ -278,6 +283,9 @@ export class Orchestrator {
       const assigneeId = index % 2 === 0
         ? this.deps.linearSeniorUserId
         : this.deps.linearJuniorUserId;
+      const reviewerUser = index % 2 === 0
+        ? this.state.agents.junior
+        : this.state.agents.senior;
       const issue = await createIssue({
         client: this.deps.linearClient,
         teamName: this.deps.linearTeamName,
@@ -303,8 +311,10 @@ export class Orchestrator {
         githubPrNumber: null,
         assignee: index % 2 === 0 ? 'senior' : 'junior',
         branch,
+        reviewerUser,
         reviewRound: 0,
-        status: 'Todo'
+        status: 'Todo',
+        workflowDispatched: false
       });
     }
 
@@ -322,6 +332,7 @@ export class Orchestrator {
     await this.postPlanningComment(
       `Created ${tasks.length} tasks and moved sprint to DEV.`
     );
+    await this.dispatchPendingWorkflows();
   }
 
   private async resetSprint(): Promise<void> {
@@ -464,6 +475,73 @@ export class Orchestrator {
 
     await this.updateState({ ...this.state, tasks });
     logger.info('Review round incremented', { linearKey, reviewRound: updatedTask.reviewRound });
+  }
+
+  private async dispatchPendingWorkflows(): Promise<void> {
+    const pendingTasks = this.state.tasks.filter(
+      (task) => !task.workflowDispatched && task.linearKey && !task.githubPrNumber
+    );
+
+    if (pendingTasks.length === 0) {
+      return;
+    }
+
+    for (const task of pendingTasks) {
+      const assigneeUser = task.assignee === 'senior'
+        ? this.state.agents.senior
+        : this.state.agents.junior;
+      const repoBaseName = this.deps.repoFullName.split('/')[1] || '';
+      const prompt = this.interpolatePrompt(prompts.checkDevProgressImplement, {
+        issue: task.linearKey || '',
+        branch: task.branch,
+        reviewerUser: task.reviewerUser,
+        DEVTEAM_UPSTREAM_REPO: this.deps.repoFullName,
+        config: { user: assigneeUser },
+        repoBaseName
+      });
+
+      await dispatchWorkflow({
+        octokit: this.deps.octokit,
+        repoFullName: this.deps.orchestratorRepo,
+        workflowFile: this.deps.agentWorkflowFile,
+        ref: 'main',
+        inputs: {
+          agent: task.assignee,
+          linear_issue: task.linearKey || '',
+          branch: task.branch,
+          prompt
+        }
+      });
+
+      task.workflowDispatched = true;
+      logger.info('Dispatched workflow for task', { linearKey: task.linearKey });
+    }
+
+    await this.updateState({ ...this.state, tasks: [...this.state.tasks] });
+  }
+
+  private interpolatePrompt(template: string, values: Record<string, unknown>): string {
+    let output = template;
+    const replaceAll = (key: string, value: string) => {
+      output = output.split(`{{${key}}}`).join(value);
+    };
+
+    Object.entries(values).forEach(([key, value]) => {
+      if (typeof value === 'string') {
+        replaceAll(key, value);
+        return;
+      }
+
+      if (typeof value === 'object' && value) {
+        Object.entries(value as Record<string, unknown>).forEach(([nestedKey, nestedValue]) => {
+          if (typeof nestedValue === 'string') {
+            replaceAll(`${key}.${nestedKey}`, nestedValue);
+          }
+        });
+      }
+    });
+
+    return output;
   }
 
   private extractCommentAuthorId(payload: Record<string, unknown>): string | null {

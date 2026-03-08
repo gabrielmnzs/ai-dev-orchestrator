@@ -9,6 +9,7 @@ import { createInitialState, loadState } from './orchestrator/state';
 import { Orchestrator } from './orchestrator/transitions';
 import { startScheduler } from './orchestrator/scheduler';
 import { logger } from './utils/logger';
+import { getProjectId, getTeamId } from './linear/issues';
 
 declare global {
   namespace Express {
@@ -51,6 +52,8 @@ const startServer = async () => {
     octokit,
     linearClient,
     repoFullName: config.githubUpstreamRepo,
+    orchestratorRepo: config.orchestratorRepo,
+    agentWorkflowFile: config.agentWorkflowFile,
     issueNumber,
     linearTeamName: config.linearTeamName,
     linearProjectName: config.linearProjectName,
@@ -73,6 +76,74 @@ const startServer = async () => {
 
   app.get('/status', (_req, res) => {
     res.status(200).json(orchestrator.getState());
+  });
+
+  app.get('/checks', async (_req, res) => {
+    const results = {
+      github: {
+        upstreamRepo: { ok: false, error: '' as string | null },
+        orchestratorRepo: { ok: false, error: '' as string | null },
+        workflows: { ok: false, error: '' as string | null }
+      },
+      linear: {
+        team: { ok: false, error: '' as string | null },
+        project: { ok: false, error: '' as string | null }
+      }
+    };
+
+    try {
+      await octokit.request('GET /repos/{owner}/{repo}', {
+        owner: config.githubUpstreamRepo.split('/')[0],
+        repo: config.githubUpstreamRepo.split('/')[1]
+      });
+      results.github.upstreamRepo.ok = true;
+      results.github.upstreamRepo.error = null;
+    } catch (error) {
+      results.github.upstreamRepo.error = error instanceof Error ? error.message : 'unknown error';
+    }
+
+    try {
+      await octokit.request('GET /repos/{owner}/{repo}', {
+        owner: config.orchestratorRepo.split('/')[0],
+        repo: config.orchestratorRepo.split('/')[1]
+      });
+      results.github.orchestratorRepo.ok = true;
+      results.github.orchestratorRepo.error = null;
+    } catch (error) {
+      results.github.orchestratorRepo.error = error instanceof Error ? error.message : 'unknown error';
+    }
+
+    try {
+      await octokit.request('GET /repos/{owner}/{repo}/actions/workflows', {
+        owner: config.orchestratorRepo.split('/')[0],
+        repo: config.orchestratorRepo.split('/')[1]
+      });
+      results.github.workflows.ok = true;
+      results.github.workflows.error = null;
+    } catch (error) {
+      results.github.workflows.error = error instanceof Error ? error.message : 'unknown error';
+    }
+
+    try {
+      await getTeamId(linearClient, config.linearTeamName);
+      results.linear.team.ok = true;
+      results.linear.team.error = null;
+    } catch (error) {
+      results.linear.team.error = error instanceof Error ? error.message : 'unknown error';
+    }
+
+    try {
+      await getProjectId(linearClient, config.linearProjectName);
+      results.linear.project.ok = true;
+      results.linear.project.error = null;
+    } catch (error) {
+      results.linear.project.error = error instanceof Error ? error.message : 'unknown error';
+    }
+
+    const allOk = Object.values(results.github).every((check) => check.ok)
+      && Object.values(results.linear).every((check) => check.ok);
+
+    res.status(allOk ? 200 : 500).json({ ok: allOk, results });
   });
 
   app.post('/webhooks/github', createGitHubWebhookHandler(orchestrator, config.githubWebhookSecret));

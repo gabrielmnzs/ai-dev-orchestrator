@@ -3,6 +3,8 @@ type Config = {
   githubAppPrivateKey: string;
   githubAppInstallationId: string;
   githubUpstreamRepo: string;
+  orchestratorRepo: string;
+  agentWorkflowFile: string;
   githubOrchUser: string;
   devSeniorUser: string;
   devJuniorUser: string;
@@ -41,6 +43,8 @@ export const loadConfig = (): Config => {
     githubAppPrivateKey: getRequiredEnv('GITHUB_APP_PRIVATE_KEY'),
     githubAppInstallationId: getRequiredEnv('GITHUB_APP_INSTALLATION_ID'),
     githubUpstreamRepo: getRequiredEnv('GITHUB_UPSTREAM_REPO'),
+    orchestratorRepo: getRequiredEnv('ORCHESTRATOR_REPO'),
+    agentWorkflowFile: getOptionalEnv('AGENT_WORKFLOW_FILE') || 'ai-dev-agent.yml',
     githubOrchUser: getRequiredEnv('GITHUB_ORCH_USER'),
     devSeniorUser: getRequiredEnv('DEV_SENIOR_USER'),
     devJuniorUser: getRequiredEnv('DEV_JUNIOR_USER'),
