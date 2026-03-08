@@ -1,0 +1,63 @@
+name: AI Dev Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      agent:
+        description: 'Which agent to run'
+        required: true
+        type: choice
+        options:
+          - senior
+          - junior
+      linear_issue:
+        description: 'Linear issue key or id'
+        required: true
+        type: string
+      branch:
+        description: 'Branch name for the task'
+        required: true
+        type: string
+      prompt:
+        description: 'Codex prompt to execute'
+        required: true
+        type: string
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select token
+        id: token
+        run: |
+          if [ "${{ inputs.agent }}" = "senior" ]; then
+            echo "GH_TOKEN=${{ secrets.GH_PAT_SR }}" >> $GITHUB_ENV
+            echo "AGENT_USER=gabrielmnzs-ai-team-sr" >> $GITHUB_ENV
+          else
+            echo "GH_TOKEN=${{ secrets.GH_PAT_JR }}" >> $GITHUB_ENV
+            echo "AGENT_USER=gabrielmnzs-ai-team-jr" >> $GITHUB_ENV
+          fi
+
+      - name: Install GitHub CLI
+        uses: cli/cli@v2
+
+      - name: Authenticate GitHub CLI
+        run: |
+          echo "${GH_TOKEN}" | gh auth login --with-token
+
+      - name: Run Codex agent
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          LINEAR_TEAM_NAME: ${{ vars.LINEAR_TEAM_NAME }}
+          LINEAR_PROJECT_NAME: ${{ vars.LINEAR_PROJECT_NAME }}
+          DEVTEAM_UPSTREAM_REPO: ${{ vars.GITHUB_UPSTREAM_REPO }}
+        run: |
+          echo "Agent: ${AGENT_USER}"
+          echo "Linear Issue: ${{ inputs.linear_issue }}"
+          echo "Branch: ${{ inputs.branch }}"
+          echo "Prompt:" 
+          echo "${{ inputs.prompt }}"
+          # TODO: Replace the echo with actual Codex invocation
