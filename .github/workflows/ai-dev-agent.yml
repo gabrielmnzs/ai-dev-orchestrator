@@ -77,7 +77,7 @@ jobs:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
           LINEAR_TEAM_NAME: ${{ vars.LINEAR_TEAM_NAME }}
           LINEAR_PROJECT_NAME: ${{ vars.LINEAR_PROJECT_NAME }}
-          DEVTEAM_UPSTREAM_REPO: ${{ vars.UPSTREAM_REPO }}
+          DEVTEAM_UPSTREAM_REPO: ${{ vars.DEVTEAM_UPSTREAM_REPO }}
           CI: true
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
