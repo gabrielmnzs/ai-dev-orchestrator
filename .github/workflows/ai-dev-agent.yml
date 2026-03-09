@@ -26,6 +26,8 @@ on:
 jobs:
   run-agent:
     runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,7 +53,6 @@ jobs:
 
       - name: Run Codex agent
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
           LINEAR_TEAM_NAME: ${{ vars.LINEAR_TEAM_NAME }}
           LINEAR_PROJECT_NAME: ${{ vars.LINEAR_PROJECT_NAME }}
@@ -61,6 +62,10 @@ jobs:
           echo "Agent: ${AGENT_USER}"
           echo "Linear Issue: ${{ inputs.linear_issue }}"
           echo "Branch: ${{ inputs.branch }}"
+          if [ -z "${OPENAI_API_KEY}" ]; then
+            echo "OPENAI_API_KEY is missing";
+            exit 1;
+          fi
           timeout 15m npx @openai/codex \
             -a never \
             -s workspace-write \
