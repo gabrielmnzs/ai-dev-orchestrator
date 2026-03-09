@@ -54,7 +54,7 @@ jobs:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
           LINEAR_TEAM_NAME: ${{ vars.LINEAR_TEAM_NAME }}
           LINEAR_PROJECT_NAME: ${{ vars.LINEAR_PROJECT_NAME }}
-          DEVTEAM_UPSTREAM_REPO: ${{ vars.GITHUB_UPSTREAM_REPO }}
+          DEVTEAM_UPSTREAM_REPO: ${{ vars.UPSTREAM_REPO }}
         run: |
           echo "Agent: ${AGENT_USER}"
           echo "Linear Issue: ${{ inputs.linear_issue }}"
