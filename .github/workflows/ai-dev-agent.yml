@@ -56,8 +56,9 @@ jobs:
           LINEAR_TEAM_NAME: ${{ vars.LINEAR_TEAM_NAME }}
           LINEAR_PROJECT_NAME: ${{ vars.LINEAR_PROJECT_NAME }}
           DEVTEAM_UPSTREAM_REPO: ${{ vars.UPSTREAM_REPO }}
+          CI: true
         run: |
           echo "Agent: ${AGENT_USER}"
           echo "Linear Issue: ${{ inputs.linear_issue }}"
           echo "Branch: ${{ inputs.branch }}"
-          npx @openai/codex "${{ inputs.prompt }}"
+          script -q /dev/null -c "npx @openai/codex \"${{ inputs.prompt }}\""
