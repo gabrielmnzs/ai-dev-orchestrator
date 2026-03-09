@@ -61,8 +61,8 @@ jobs:
           echo "Agent: ${AGENT_USER}"
           echo "Linear Issue: ${{ inputs.linear_issue }}"
           echo "Branch: ${{ inputs.branch }}"
-          timeout 15m npx @openai/codex exec \
-            --ask-for-approval never \
-            --sandbox workspace-write \
-            "${{ inputs.prompt }}" \
+          timeout 15m npx @openai/codex \
+            -a never \
+            -s workspace-write \
+            exec "${{ inputs.prompt }}" \
             || { echo "Codex execution timed out"; exit 1; }
