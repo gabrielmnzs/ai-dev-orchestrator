@@ -27,7 +27,6 @@ jobs:
   run-agent:
     runs-on: ubuntu-latest
     env:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       CODEX_QUIET_MODE: '1'
     steps:
       - name: Checkout
@@ -54,22 +53,29 @@ jobs:
 
       - name: Run Codex agent
         env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
           LINEAR_TEAM_NAME: ${{ vars.LINEAR_TEAM_NAME }}
           LINEAR_PROJECT_NAME: ${{ vars.LINEAR_PROJECT_NAME }}
           DEVTEAM_UPSTREAM_REPO: ${{ vars.UPSTREAM_REPO }}
           CI: true
         run: |
-          export OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
+          OPENAI_API_KEY="$(printf '%s' "${OPENAI_API_KEY:-}" | tr -d '\r\n')"
           echo "Agent: ${AGENT_USER}"
           echo "Linear Issue: ${{ inputs.linear_issue }}"
           echo "Branch: ${{ inputs.branch }}"
           if [ -z "${OPENAI_API_KEY}" ]; then
             echo "OPENAI_API_KEY is missing";
             exit 1;
-          fi          
-          timeout 15m npx @openai/codex \
+          fi
+          if [ "${OPENAI_API_KEY#sk-}" = "${OPENAI_API_KEY}" ]; then
+            echo "OPENAI_API_KEY format looks invalid (expected prefix sk-).";
+            exit 1;
+          fi
+          echo "::add-mask::${OPENAI_API_KEY}"
+          timeout 15m env OPENAI_API_KEY="${OPENAI_API_KEY}" npx @openai/codex@0.112.0 \
+            exec \
             -a never \
             -s workspace-write \
-            exec "${{ inputs.prompt }}" \
+            "${{ inputs.prompt }}" \
             || { echo "Codex execution timed out"; exit 1; }
