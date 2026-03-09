@@ -51,40 +51,43 @@ jobs:
       - name: Verify GitHub CLI auth
         run: gh auth status
 
-      - name: Run Codex agent
+      - name: Validate Codex inputs
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
-          LINEAR_TEAM_NAME: ${{ vars.LINEAR_TEAM_NAME }}
-          LINEAR_PROJECT_NAME: ${{ vars.LINEAR_PROJECT_NAME }}
-          DEVTEAM_UPSTREAM_REPO: ${{ vars.UPSTREAM_REPO }}
-          CI: true
         run: |
           OPENAI_API_KEY="$(printf '%s' "${OPENAI_API_KEY:-}" | tr -d '\r\n')"
           echo "Agent: ${AGENT_USER}"
           echo "Linear Issue: ${{ inputs.linear_issue }}"
           echo "Branch: ${{ inputs.branch }}"
           if [ -z "${OPENAI_API_KEY}" ]; then
-            echo "OPENAI_API_KEY is missing";
-            exit 1;
-          fi
-          if [ "${OPENAI_API_KEY#sk-}" = "${OPENAI_API_KEY}" ]; then
-            echo "OPENAI_API_KEY format looks invalid (expected prefix sk-).";
-            exit 1;
-          fi
-          echo "::add-mask::${OPENAI_API_KEY}"
-          set +e
-          timeout 15m env OPENAI_API_KEY="${OPENAI_API_KEY}" npx @openai/codex@0.112.0 \
-            -a never \
-            --sandbox workspace-write \
-            exec "${{ inputs.prompt }}"
-          exit_code=$?
-          set -e
-          if [ $exit_code -eq 124 ]; then
-            echo "Codex execution timed out"
+            echo "OPENAI_API_KEY is missing"
             exit 1
           fi
-          if [ $exit_code -ne 0 ]; then
-            echo "Codex execution failed with exit code $exit_code"
-            exit $exit_code
+          if [ "${OPENAI_API_KEY#sk-}" = "${OPENAI_API_KEY}" ]; then
+            echo "OPENAI_API_KEY format looks invalid (expected prefix sk-)"
+            exit 1
           fi
+
+      - name: Run Codex agent
+        id: run_codex
+        uses: openai/codex-action@v1
+        timeout-minutes: 15
+        env:
+          GH_TOKEN: ${{ env.GH_TOKEN }}
+          AGENT_USER: ${{ env.AGENT_USER }}
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          LINEAR_TEAM_NAME: ${{ vars.LINEAR_TEAM_NAME }}
+          LINEAR_PROJECT_NAME: ${{ vars.LINEAR_PROJECT_NAME }}
+          DEVTEAM_UPSTREAM_REPO: ${{ vars.UPSTREAM_REPO }}
+          CI: true
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          sandbox: workspace-write
+          safety-strategy: drop-sudo
+          codex-args: '["-a", "never"]'
+          prompt: ${{ inputs.prompt }}
+
+      - name: Show Codex final message
+        if: ${{ steps.run_codex.outputs.final-message != '' }}
+        run: |
+          echo "${{ steps.run_codex.outputs.final-message }}"
