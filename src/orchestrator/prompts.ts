@@ -1,10 +1,12 @@
 export const prompts = {
-  setupForksSenior: `You are the senior dev agent (Codex). Create a fork of {{DEVTEAM_UPSTREAM_REPO}} into your GitHub account.
+  setupForksSenior: `Optional (unused when working directly on upstream).
+You are the senior dev agent (Codex). Create a fork of {{DEVTEAM_UPSTREAM_REPO}} into your GitHub account.
 Steps:
 1) gh repo fork {{DEVTEAM_UPSTREAM_REPO}} --clone=false
 2) Confirm with: gh repo view {{config.user}}/{{repoBaseName}}
 Return: FORK_URL=<url>`,
-  setupForksJunior: `You are the junior dev agent (Codex). Create a fork of {{DEVTEAM_UPSTREAM_REPO}} into your GitHub account.
+  setupForksJunior: `Optional (unused when working directly on upstream).
+You are the junior dev agent (Codex). Create a fork of {{DEVTEAM_UPSTREAM_REPO}} into your GitHub account.
 Steps:
 1) gh repo fork {{DEVTEAM_UPSTREAM_REPO}} --clone=false
 2) Confirm with: gh repo view {{config.user}}/{{repoBaseName}}
@@ -39,15 +41,14 @@ TASK|{{issue_id}}|{{assignee}}|{{branch}}`,
   checkDevProgressImplement: `Implement ONLY the feature in Linear issue {{issue}}.
 Steps:
 1) Mark issue In Progress (Linear save_issue stateName="In Progress")
-2) Sync fork: gh repo sync {{config.user}}/{{repoBaseName}} --force
-3) Clone or enter fork
-4) Read issue details (Linear get_issue)
-5) Create branch: {{branch}}
-6) Implement feature only (atomic commits)
-7) Push to fork
-8) Create PR: gh pr create --repo {{DEVTEAM_UPSTREAM_REPO}} --head {{config.user}}:{{branch}}
-9) Request review from {{reviewerUser}}
-10) Comment on Linear issue + planning issue
+2) Clone or enter the upstream repo
+3) Read issue details (Linear get_issue)
+4) Create branch: {{branch}}
+5) Implement feature only (atomic commits)
+6) Push branch to upstream
+7) Create PR: gh pr create --repo {{DEVTEAM_UPSTREAM_REPO}} --head {{branch}}
+8) Request review from {{reviewerUser}}
+9) Comment on Linear issue + planning issue
 Return: PR_CREATED=<number>`,
   processReview: `Review PR #{{pr}} on {{DEVTEAM_UPSTREAM_REPO}}.
 Steps:
