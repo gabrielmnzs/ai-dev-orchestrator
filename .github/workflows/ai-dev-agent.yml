@@ -51,6 +51,7 @@ jobs:
 
       - name: Run Codex agent
         env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
           LINEAR_TEAM_NAME: ${{ vars.LINEAR_TEAM_NAME }}
           LINEAR_PROJECT_NAME: ${{ vars.LINEAR_PROJECT_NAME }}
@@ -59,6 +60,4 @@ jobs:
           echo "Agent: ${AGENT_USER}"
           echo "Linear Issue: ${{ inputs.linear_issue }}"
           echo "Branch: ${{ inputs.branch }}"
-          echo "Prompt:" 
-          echo "${{ inputs.prompt }}"
-          # TODO: Replace the echo with actual Codex invocation
+          npx @openai/codex "${{ inputs.prompt }}"
