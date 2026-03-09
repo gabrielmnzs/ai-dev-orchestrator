@@ -34,10 +34,10 @@ jobs:
         id: token
         run: |
           if [ "${{ inputs.agent }}" = "senior" ]; then
-            echo "AUTH_TOKEN=${{ secrets.GH_PAT_SR }}" >> $GITHUB_ENV
+            echo "GH_TOKEN=${{ secrets.GH_PAT_SR }}" >> $GITHUB_ENV
             echo "AGENT_USER=gabrielmnzs-ai-team-sr" >> $GITHUB_ENV
           else
-            echo "AUTH_TOKEN=${{ secrets.GH_PAT_JR }}" >> $GITHUB_ENV
+            echo "GH_TOKEN=${{ secrets.GH_PAT_JR }}" >> $GITHUB_ENV
             echo "AGENT_USER=gabrielmnzs-ai-team-jr" >> $GITHUB_ENV
           fi
 
@@ -46,12 +46,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gh
 
-      - name: Authenticate GitHub CLI
-        run: |
-          echo "${AUTH_TOKEN}" | gh auth login --with-token
-          gh auth status
-        env:
-          GH_TOKEN: ${{ env.AUTH_TOKEN }}
+      - name: Verify GitHub CLI auth
+        run: gh auth status
 
       - name: Run Codex agent
         env:
