@@ -28,6 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      CODEX_QUIET_MODE: "1"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -66,6 +67,7 @@ jobs:
             echo "OPENAI_API_KEY is missing";
             exit 1;
           fi
+          echo "OPENAI_API_KEY length: ${#OPENAI_API_KEY}"
           timeout 15m npx @openai/codex \
             -a never \
             -s workspace-write \
